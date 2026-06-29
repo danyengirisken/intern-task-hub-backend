@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <!-- Rol <-> Menu ara tablosu (composite PK) -->
+    <changeSet author="danyengirisken" id="S_ROLE_MENU" failOnError="false">
+        <createTable tableName="S_ROLE_MENU">
+            <column name="role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="menu_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey
+                tableName="S_ROLE_MENU"
+                columnNames="role_id, menu_id"
+                constraintName="PK_S_ROLE_MENU"/>
+        <addForeignKeyConstraint
+                baseTableName="S_ROLE_MENU"
+                baseColumnNames="role_id"
+                constraintName="FK_S_ROLE_MENU_ROLE"
+                referencedTableName="S_ROLE"
+                referencedColumnNames="id"/>
+        <addForeignKeyConstraint
+                baseTableName="S_ROLE_MENU"
+                baseColumnNames="menu_id"
+                constraintName="FK_S_ROLE_MENU_MENU"
+                referencedTableName="S_MENU"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

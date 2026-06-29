@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet author="danyengirisken" id="SEQ_T_TASK" failOnError="false">
+        <createSequence sequenceName="SEQ_T_TASK" startValue="1" incrementBy="1"/>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="T_TASK" failOnError="false">
+        <createTable tableName="T_TASK">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="PK_T_TASK" nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(1000)"/>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="VARCHAR(20)"/>
+            <column name="due_date" type="DATE"/>
+            <!-- Auditable kolonlari -->
+            <column name="created_by" type="BIGINT"/>
+            <column name="created_date" type="TIMESTAMP"/>
+            <column name="last_modified_by" type="BIGINT"/>
+            <column name="last_modified_date" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

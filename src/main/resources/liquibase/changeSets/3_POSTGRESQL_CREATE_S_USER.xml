@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet author="danyengirisken" id="SEQ_S_USER" failOnError="false">
+        <createSequence sequenceName="SEQ_S_USER" startValue="1" incrementBy="1"/>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="S_USER" failOnError="false">
+        <createTable tableName="S_USER">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="PK_S_USER" nullable="false"/>
+            </column>
+            <column name="full_name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="UK_S_USER_USERNAME"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Auditable kolonlari -->
+            <column name="created_by" type="BIGINT"/>
+            <column name="created_date" type="TIMESTAMP"/>
+            <column name="last_modified_by" type="BIGINT"/>
+            <column name="last_modified_date" type="TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="S_USER"
+                baseColumnNames="role_id"
+                constraintName="FK_S_USER_ROLE"
+                referencedTableName="S_ROLE"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

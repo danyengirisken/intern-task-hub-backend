@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <!-- ============================================================
+         Master changelog (carbon konvansiyonu)
+         Sira: once tablolar (CREATE .xml), sonra veriler (INITDATA .sql)
+         ============================================================ -->
+
+    <include file="liquibase/changeSets/1_POSTGRESQL_CREATE_S_ROLE.xml"/>
+    <include file="liquibase/changeSets/2_POSTGRESQL_CREATE_S_MENU.xml"/>
+    <include file="liquibase/changeSets/3_POSTGRESQL_CREATE_S_USER.xml"/>
+    <include file="liquibase/changeSets/4_POSTGRESQL_CREATE_S_ROLE_MENU.xml"/>
+
+    <include file="liquibase/changeSets/5_POSTGRESQL_INITDATA.sql"/>
+
+    <!-- Menu yapisini hiyerarsik hale getir + menu tanimlari -->
+    <include file="liquibase/changeSets/6_POSTGRESQL_ALTER_S_MENU.xml"/>
+    <include file="liquibase/changeSets/7_POSTGRESQL_ADD_MENU.sql"/>
+    <include file="liquibase/changeSets/8_POSTGRESQL_INITDATA_S_ROLE_MENU.sql"/>
+
+    <!-- Görev (task) modülü -->
+    <include file="liquibase/changeSets/9_POSTGRESQL_CREATE_T_TASK.xml"/>
+    <include file="liquibase/changeSets/10_POSTGRESQL_INITDATA_T_TASK.sql"/>
+
+</databaseChangeLog>

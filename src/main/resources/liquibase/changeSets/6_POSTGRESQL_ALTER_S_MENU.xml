@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <!-- S_MENU'yu hiyerarsik menu yapisina genistir (carbon S_MENU referansi).
+         Uygulanmis changeset'ler degistirilmez; degisiklik yeni changeset'lerle yapilir. -->
+
+    <changeSet author="danyengirisken" id="ALTER_S_MENU_ADD_COLUMNS" failOnError="false">
+        <addColumn tableName="S_MENU">
+            <column name="parent_id" type="BIGINT"/>
+            <column name="title" type="VARCHAR(150)"/>
+            <column name="page" type="VARCHAR(200)"/>
+            <column name="menu_order" type="INTEGER"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- Eski kolonlardaki veriyi yeni kolonlara tasi (mevcut Dashboard satiri) -->
+    <changeSet author="danyengirisken" id="ALTER_S_MENU_MIGRATE_DATA" failOnError="false">
+        <sql>update s_menu set title = name, page = path, menu_order = 1 where title is null;</sql>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="ALTER_S_MENU_TITLE_NOTNULL" failOnError="false">
+        <addNotNullConstraint tableName="S_MENU" columnName="title" columnDataType="VARCHAR(150)"/>
+    </changeSet>
+
+    <!-- parent_id self-referans FK -->
+    <changeSet author="danyengirisken" id="ALTER_S_MENU_FK_PARENT" failOnError="false">
+        <addForeignKeyConstraint
+                baseTableName="S_MENU"
+                baseColumnNames="parent_id"
+                constraintName="FK_S_MENU_PARENT"
+                referencedTableName="S_MENU"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Artik kullanilmayan eski kolonlari kaldir -->
+    <changeSet author="danyengirisken" id="ALTER_S_MENU_DROP_OLD" failOnError="false">
+        <dropColumn tableName="S_MENU" columnName="name"/>
+        <dropColumn tableName="S_MENU" columnName="path"/>
+    </changeSet>
+
+</databaseChangeLog>
