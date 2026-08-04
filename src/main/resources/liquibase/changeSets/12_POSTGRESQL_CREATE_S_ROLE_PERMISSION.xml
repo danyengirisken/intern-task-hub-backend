@@ -5,31 +5,31 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
-    <!-- Rol <-> Menu ara tablosu (composite PK) -->
-    <changeSet author="danyengirisken" id="S_ROLE_MENU" failOnError="false">
-        <createTable tableName="S_ROLE_MENU">
+    <!-- Rol <-> Yetki ara tablosu (PTT S_ROLE_PERMISSION referansi, composite PK) -->
+    <changeSet author="danyengirisken" id="S_ROLE_PERMISSION" failOnError="false">
+        <createTable tableName="S_ROLE_PERMISSION">
             <column name="role_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
-            <column name="menu_id" type="BIGINT">
+            <column name="permission_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
         </createTable>
         <addPrimaryKey
-                tableName="S_ROLE_MENU"
-                columnNames="role_id, menu_id"
-                constraintName="PK_S_ROLE_MENU"/>
+                tableName="S_ROLE_PERMISSION"
+                columnNames="role_id, permission_id"
+                constraintName="PK_S_ROLE_PERMISSION"/>
         <addForeignKeyConstraint
-                baseTableName="S_ROLE_MENU"
+                baseTableName="S_ROLE_PERMISSION"
                 baseColumnNames="role_id"
-                constraintName="FK_S_ROLE_MENU_ROLE"
+                constraintName="FK_S_ROLE_PERM_ROLE"
                 referencedTableName="S_ROLE"
                 referencedColumnNames="id"/>
         <addForeignKeyConstraint
-                baseTableName="S_ROLE_MENU"
-                baseColumnNames="menu_id"
-                constraintName="FK_S_ROLE_MENU_MENU"
-                referencedTableName="S_MENU"
+                baseTableName="S_ROLE_PERMISSION"
+                baseColumnNames="permission_id"
+                constraintName="FK_S_ROLE_PERM_PERM"
+                referencedTableName="S_PERMISSION"
                 referencedColumnNames="id"/>
     </changeSet>
 

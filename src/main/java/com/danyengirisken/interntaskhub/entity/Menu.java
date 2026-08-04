@@ -15,12 +15,14 @@ import lombok.NoArgsConstructor;
 /**
  * Hiyerarsik uygulama menu ogesi (carbon S_MENU yapisi referans alindi).
  *
- *  - parentId : ust menu (grup); null ise en ust seviye menudur
- *  - page     : yonlendirilecek route; grup menulerde null
- *  - menuOrder: ayni seviyedeki siralama
- *  - active   : menunun gosterilip gosterilmeyecegi
+ *  - parentId     : ust menu (grup); null ise en ust seviye menudur
+ *  - page         : yonlendirilecek route; grup menulerde null
+ *  - menuOrder    : ayni seviyedeki siralama
+ *  - active       : menunun gosterilip gosterilmeyecegi
+ *  - permissionId : menuyu goren yetki (S_PERMISSION); null ise herkese acik
  *
- * Yeni bir ekran eklemek icin S_MENU'ya yeni bir satir insert etmek yeterlidir.
+ * Yeni bir ekran eklemek icin S_MENU'ya yeni bir satir insert etmek yeterlidir
+ * (bkz. 14_POSTGRESQL_INITDATA_S_PERMISSION.sql icindeki ekleme sablonu).
  */
 @Entity
 @Table(name = "S_MENU")
@@ -53,4 +55,7 @@ public class Menu extends Auditable {
 
     @Column(name = "active", nullable = false)
     private Boolean active;
+
+    @Column(name = "permission_id")
+    private Long permissionId;
 }

@@ -20,7 +20,9 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * Rol (ADMIN, INTERN). Rolun erisebildigi menuler S_ROLE_MENU ara tablosunda tutulur.
+ * Rol (ADMIN, INTERN). Rolun sahip oldugu yetkiler (permission) S_ROLE_PERMISSION
+ * ara tablosunda tutulur. Menu erisimi bu yetkiler uzerinden belirlenir
+ * (menu.permissionId, rolun yetkilerinden birine esitse menu gorunur).
  */
 @Entity
 @Table(name = "S_ROLE")
@@ -41,11 +43,11 @@ public class Role extends Auditable {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "S_ROLE_MENU",
+            name = "S_ROLE_PERMISSION",
             joinColumns = @JoinColumn(name = "role_id"),
-            inverseJoinColumns = @JoinColumn(name = "menu_id")
+            inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Set<Menu> menus = new HashSet<>();
+    private Set<Permission> permissions = new HashSet<>();
 }

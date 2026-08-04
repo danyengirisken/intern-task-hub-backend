@@ -6,7 +6,7 @@
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
     <!-- S_MENU'yu hiyerarsik menu yapisina genistir (carbon S_MENU referansi).
-         Uygulanmis changeset'ler degistirilmez; degisiklik yeni changeset'lerle yapilir. -->
+         Menu verisi bu noktada henuz yoktur; 14_...PERMISSION_MENU.xml'de eklenir. -->
 
     <changeSet author="danyengirisken" id="ALTER_S_MENU_ADD_COLUMNS" failOnError="false">
         <addColumn tableName="S_MENU">
@@ -18,11 +18,6 @@
                 <constraints nullable="false"/>
             </column>
         </addColumn>
-    </changeSet>
-
-    <!-- Eski kolonlardaki veriyi yeni kolonlara tasi (mevcut Dashboard satiri) -->
-    <changeSet author="danyengirisken" id="ALTER_S_MENU_MIGRATE_DATA" failOnError="false">
-        <sql>update s_menu set title = name, page = path, menu_order = 1 where title is null;</sql>
     </changeSet>
 
     <changeSet author="danyengirisken" id="ALTER_S_MENU_TITLE_NOTNULL" failOnError="false">

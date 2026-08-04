@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <!-- S_MENU'ye permission_id ekle (PTT: menu -> permission baglantisi).
+         permission_id NULL ise menu herkese acik demektir. -->
+
+    <changeSet author="danyengirisken" id="ALTER_S_MENU_ADD_PERMISSION_ID" failOnError="false">
+        <addColumn tableName="S_MENU">
+            <column name="permission_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="ALTER_S_MENU_FK_PERMISSION" failOnError="false">
+        <addForeignKeyConstraint
+                baseTableName="S_MENU"
+                baseColumnNames="permission_id"
+                constraintName="FK_S_MENU_PERMISSION"
+                referencedTableName="S_PERMISSION"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

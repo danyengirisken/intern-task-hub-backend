@@ -7,23 +7,31 @@
 
     <!-- ============================================================
          Master changelog (carbon konvansiyonu)
-         Sira: once tablolar (CREATE .xml), sonra veriler (INITDATA .sql)
+         Sira: once semasal (CREATE/ALTER .xml), sonra veriler.
+         Erisim modeli: menu -> permission -> role_permission -> role
          ============================================================ -->
 
+    <!-- Sema: temel tablolar -->
     <include file="liquibase/changeSets/1_POSTGRESQL_CREATE_S_ROLE.xml"/>
     <include file="liquibase/changeSets/2_POSTGRESQL_CREATE_S_MENU.xml"/>
     <include file="liquibase/changeSets/3_POSTGRESQL_CREATE_S_USER.xml"/>
-    <include file="liquibase/changeSets/4_POSTGRESQL_CREATE_S_ROLE_MENU.xml"/>
 
+    <!-- Baslangic verisi: roller + kullanicilar -->
     <include file="liquibase/changeSets/5_POSTGRESQL_INITDATA.sql"/>
 
-    <!-- Menu yapisini hiyerarsik hale getir + menu tanimlari -->
+    <!-- S_MENU'yu hiyerarsik yapiya genislet -->
     <include file="liquibase/changeSets/6_POSTGRESQL_ALTER_S_MENU.xml"/>
-    <include file="liquibase/changeSets/7_POSTGRESQL_ADD_MENU.sql"/>
-    <include file="liquibase/changeSets/8_POSTGRESQL_INITDATA_S_ROLE_MENU.sql"/>
 
     <!-- Görev (task) modülü -->
     <include file="liquibase/changeSets/9_POSTGRESQL_CREATE_T_TASK.xml"/>
     <include file="liquibase/changeSets/10_POSTGRESQL_INITDATA_T_TASK.sql"/>
+
+    <!-- Yetki (permission) katmani semasi -->
+    <include file="liquibase/changeSets/11_POSTGRESQL_CREATE_S_PERMISSION.xml"/>
+    <include file="liquibase/changeSets/12_POSTGRESQL_CREATE_S_ROLE_PERMISSION.xml"/>
+    <include file="liquibase/changeSets/13_POSTGRESQL_ALTER_S_MENU_ADD_PERMISSION.xml"/>
+
+    <!-- Yetkiler + rol atamalari + menuler (PTT tarzi XML/CDATA) -->
+    <include file="liquibase/changeSets/14_POSTGRESQL_INITDATA_PERMISSION_MENU.xml"/>
 
 </databaseChangeLog>

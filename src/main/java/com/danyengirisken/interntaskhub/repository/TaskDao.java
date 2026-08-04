@@ -8,5 +8,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TaskDao extends JpaRepository<Task, Long> {
 
-    List<Task> findAllByOrderByIdDesc();
+//    List<Task> findAllByOrderByIdDesc();
+
+
+
+
+
 }
