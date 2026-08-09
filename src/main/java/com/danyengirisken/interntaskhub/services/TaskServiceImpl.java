@@ -22,10 +22,10 @@ public class TaskServiceImpl implements TaskService {
         this.taskDao = taskDao;
     }
 
+
     @Override
-    @Transactional(readOnly = true)
     public List<TaskDto> findAll() {
-        return taskDao.findAllByOrderByIdDesc().stream().map(this::toDto).toList();
+        return List.of();
     }
 
     @Override

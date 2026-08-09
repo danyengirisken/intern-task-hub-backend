@@ -43,6 +43,16 @@
         </sql>
     </changeSet>
 
+    <changeSet author="mirackoc" id="project_add_s_permission" dbms="postgresql">
+        <sql dbms="postgresql" splitStatements="true" stripComments="true">
+            <![CDATA[
+            insert into s_permission (id, name, title, created_date) values
+                (nextval('SEQ_S_PERMISSION'), 'ProjectController', 'Project', now());
+
+            ]]>
+        </sql>
+    </changeSet>
+
     <!-- 2) Rol atamaları: ADMIN tüm yetkiler, INTERN yalnızca Dashboard/Tanımlamalar/Görevler -->
     <changeSet author="danyengirisken" id="INITDATA_S_ROLE_PERMISSION" dbms="postgresql">
         <sql dbms="postgresql" splitStatements="true" stripComments="true">
@@ -54,6 +64,16 @@
                 ((select id from s_role where name = 'INTERN'), (select id from s_permission where name = 'DashboardView')),
                 ((select id from s_role where name = 'INTERN'), (select id from s_permission where name = 'TanimlamalarMenu')),
                 ((select id from s_role where name = 'INTERN'), (select id from s_permission where name = 'TaskController'));
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="mirackoc" id="project_s_role_permission_add" dbms="postgresql">
+        <sql dbms="postgresql" splitStatements="true" stripComments="true">
+            <![CDATA[
+
+            insert into s_role_permission (role_id, permission_id) values
+                ((select id from s_role where name = 'INTERN'), (select id from s_permission where name = 'ProjectController'));
             ]]>
         </sql>
     </changeSet>
@@ -92,6 +112,23 @@
                          and parent_id = (select id from s_menu where title = 'Sistem Ayarları' and parent_id is null)),
                     'Kullanıcılara Rol Atama', '/sistem/rol-atama', 'manage_accounts', 1, true,
                     (select id from s_permission where name = 'RolAtamaController'), now());
+            ]]>
+        </sql>
+    </changeSet>
+
+
+    <changeSet author="mirackoc" id="project_add_s_menu" dbms="postgresql">
+        <sql dbms="postgresql" splitStatements="true" stripComments="true">
+            <![CDATA[
+
+
+            insert into s_menu (id, parent_id, title, page, icon, menu_order, active, permission_id, created_date)
+            values (nextval('SEQ_S_MENU'),
+                    (select id from s_menu where title = 'Projeler' and parent_id is null),
+                    'Projeler', '/projeler', 'project_alt', 5, true,
+                    (select id from s_permission where name = 'ProjectController'), now());
+
+
             ]]>
         </sql>
     </changeSet>

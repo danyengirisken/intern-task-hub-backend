@@ -15,7 +15,7 @@
     <include file="liquibase/changeSets/1_POSTGRESQL_CREATE_S_ROLE.xml"/>
     <include file="liquibase/changeSets/2_POSTGRESQL_CREATE_S_MENU.xml"/>
     <include file="liquibase/changeSets/3_POSTGRESQL_CREATE_S_USER.xml"/>
-
+    <include file="liquibase/changeSets/4_POSTGRESQL_CREATE_S_PARTNER.xml"/>
     <!-- Baslangic verisi: roller + kullanicilar -->
     <include file="liquibase/changeSets/5_POSTGRESQL_INITDATA.sql"/>
 
@@ -33,5 +33,7 @@
 
     <!-- Yetkiler + rol atamalari + menuler (PTT tarzi XML/CDATA) -->
     <include file="liquibase/changeSets/14_POSTGRESQL_INITDATA_PERMISSION_MENU.xml"/>
+
+    <include file="liquibase/changeSets/15_POSTGRESQL_CREATE_T_PROJECT.xml"/>
 
 </databaseChangeLog>
