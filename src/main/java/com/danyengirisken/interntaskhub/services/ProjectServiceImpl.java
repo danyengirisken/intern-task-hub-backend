@@ -3,47 +3,39 @@ package com.danyengirisken.interntaskhub.services;
 import com.danyengirisken.interntaskhub.entity.Tproject;
 import com.danyengirisken.interntaskhub.entity.dto.ProjectRequest;
 import com.danyengirisken.interntaskhub.exception.ResourceNotFoundException;
+import com.danyengirisken.interntaskhub.repository.PartnerDao;
 import com.danyengirisken.interntaskhub.repository.ProjectDao;
+import com.danyengirisken.interntaskhub.security.UserContext;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
 
 @Service
 @Transactional
 public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectDao projectDao;
-    private final UserService userService;
+    private final PartnerDao partnerDao;
+    private final UserContext userContext;
 
-    public ProjectServiceImpl(ProjectDao projectDao, UserService userService) {
+    public ProjectServiceImpl(ProjectDao projectDao,
+                              PartnerDao partnerDao,
+                              UserContext userContext) {
         this.projectDao = projectDao;
-        this.userService = userService;
-    }
-
-    private boolean isAdmin() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
-    }
-
-    private Long getCurrentPartnerId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        return userService.findByUsername(username).getId();
+        this.partnerDao = partnerDao;
+        this.userContext = userContext;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Tproject> findAll() {
-        if (isAdmin()) {
+        if (userContext.isAdmin()) {
             return projectDao.findAll();
-        } else {
-            return projectDao.findByPartner_id(getCurrentPartnerId());
         }
+        return projectDao.findByPartner_id(userContext.getCurrentPartnerId());
     }
 
     @Override
@@ -52,7 +44,8 @@ public class ProjectServiceImpl implements ProjectService {
         Tproject project = projectDao.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Proje bulunamadı: " + id));
 
-        if (!isAdmin() && !project.getPartner_id().equals(getCurrentPartnerId())) {
+        if (!userContext.isAdmin()
+                && !userContext.getCurrentPartnerId().equals(project.getPartner_id())) {
             throw new AccessDeniedException("Bu projeyi görüntüleme veya düzenleme yetkiniz yok.");
         }
 
@@ -65,9 +58,13 @@ public class ProjectServiceImpl implements ProjectService {
 
         if (request.getId() != null) {
             project = findById(request.getId());
+            // ADMIN mevcut bir projeyi baska partnere tasiyabilir.
+            if (userContext.isAdmin() && request.getPartnerId() != null) {
+                project.setPartner_id(requirePartner(request.getPartnerId()));
+            }
         } else {
             project = new Tproject();
-            project.setPartner_id(getCurrentPartnerId());
+            project.setPartner_id(resolvePartnerId(request));
         }
 
         project.setDescription(request.getDescription());
@@ -84,5 +81,24 @@ public class ProjectServiceImpl implements ProjectService {
     public void delete(Long id) {
         Tproject project = findById(id);
         projectDao.delete(project);
+    }
+
+    /**
+     * Yeni projenin partneri: ADMIN istedigi partneri secebilir (sistemi kullanan
+     * firmalara proje acabilmesi icin), diger kullanicilar icin her zaman kendi
+     * partneri kullanilir ve istekten gelen deger yok sayilir.
+     */
+    private Long resolvePartnerId(ProjectRequest request) {
+        if (userContext.isAdmin() && request.getPartnerId() != null) {
+            return requirePartner(request.getPartnerId());
+        }
+        return userContext.getCurrentPartnerId();
+    }
+
+    private Long requirePartner(Long partnerId) {
+        if (!partnerDao.existsById(partnerId)) {
+            throw new ResourceNotFoundException("Partner bulunamadı: " + partnerId);
+        }
+        return partnerId;
     }
 }

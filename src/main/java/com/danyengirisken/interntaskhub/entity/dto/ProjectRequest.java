@@ -6,6 +6,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+/**
+ * Proje olusturma/guncelleme istegi.
+ * id null ise yeni kayit, dolu ise guncelleme yapilir.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,7 +17,11 @@ public class ProjectRequest {
 
     private Long id;
 
-    // partnerId alanını backend'de manuel hallettiğimiz için DTO'dan tamamen sildik.
+    /**
+     * Projenin acilacagi partner. YALNIZCA ADMIN gonderebilir; diger
+     * kullanicilar icin yok sayilir ve oturumdaki kullanicinin partneri atanir.
+     */
+    private Long partnerId;
 
     private String description;
 
@@ -21,7 +29,7 @@ public class ProjectRequest {
 
     private String code;
 
-    private Integer active;
+    private String active;
 
     private LocalDate startDate;
 

@@ -2,8 +2,10 @@ package com.danyengirisken.interntaskhub.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -29,6 +31,23 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleNotFound(
             ResourceNotFoundException ex, HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    /** Yetkisiz islem (orn. baska partnerin projesi, ADMIN gerektiren uc). */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(
+            AccessDeniedException ex, HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
+    /** Benzersizlik / foreign key gibi veri butunlugu ihlalleri. */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrity(
+            DataIntegrityViolationException ex, HttpServletRequest request) {
+        String message = (ex.getMostSpecificCause() == ex && ex.getMessage() != null)
+                ? ex.getMessage()
+                : "Kayıt, bağlı olduğu veriler nedeniyle işlenemedi.";
+        return build(HttpStatus.CONFLICT, message, request);
     }
 
     /** Bean Validation hatalari (@Valid). */

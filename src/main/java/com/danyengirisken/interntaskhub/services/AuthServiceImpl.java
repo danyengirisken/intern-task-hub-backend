@@ -1,13 +1,20 @@
 package com.danyengirisken.interntaskhub.services;
 
+import com.danyengirisken.interntaskhub.entity.Partner;
 import com.danyengirisken.interntaskhub.entity.Role;
 import com.danyengirisken.interntaskhub.entity.User;
 import com.danyengirisken.interntaskhub.entity.dto.LoginRequest;
 import com.danyengirisken.interntaskhub.entity.dto.LoginResponse;
 import com.danyengirisken.interntaskhub.entity.dto.RegisterRequest;
+import com.danyengirisken.interntaskhub.entity.dto.UserDto;
+import com.danyengirisken.interntaskhub.exception.ResourceNotFoundException;
+import com.danyengirisken.interntaskhub.repository.PartnerDao;
+import com.danyengirisken.interntaskhub.repository.RoleDao;
 import com.danyengirisken.interntaskhub.repository.UserDao;
-import com.danyengirisken.interntaskhub.security.JwtService; // JwtService Importu
-import org.springframework.security.authentication.AuthenticationManager; // AuthManager Importu
+import com.danyengirisken.interntaskhub.security.JwtService;
+import com.danyengirisken.interntaskhub.security.Roles;
+import java.util.ArrayList;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,17 +24,31 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class AuthServiceImpl implements AuthService {
 
+    /** Yeni kaydolan kullanicilarin varsayilan rolu (ADMIN degil!). */
+    private static final String DEFAULT_ROLE = Roles.CUSTOMER;
+
+    /** Yeni kaydolan kullanicilarin baglanacagi varsayilan partner kodu. */
+    private static final String DEFAULT_PARTNER_CODE = "ABT";
+
     private final UserDao userDao;
+    private final RoleDao roleDao;
+    private final PartnerDao partnerDao;
+    private final MenuService menuService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
-    // CONSTRUCTOR GÜNCELLENDİ: Yeni servisleri içeriye alıyoruz
     public AuthServiceImpl(UserDao userDao,
+                           RoleDao roleDao,
+                           PartnerDao partnerDao,
+                           MenuService menuService,
                            PasswordEncoder passwordEncoder,
                            AuthenticationManager authenticationManager,
                            JwtService jwtService) {
         this.userDao = userDao;
+        this.roleDao = roleDao;
+        this.partnerDao = partnerDao;
+        this.menuService = menuService;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
@@ -35,61 +56,59 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse login(LoginRequest request) {
-        // 1. Spring Security ile kullanıcı adı ve şifreyi doğrula
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-        // 2. Doğrulama başarılıysa, token üretmek için kullanıcıyı veritabanından çek
         User user = userDao.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Kullanıcı bulunamadı: " + request.getUsername()));
 
-        // 3. Kullanıcının rolünü metin formatında al
-        // (Eğer Role class'ının içinde spesifik bir isim alanı varsa örn: getName() onu kullanabilirsin)
-        String roleName = user.getRole() != null ? user.getRole().toString() : "USER";
+        String roleName = user.getRole() != null ? user.getRole().getName() : DEFAULT_ROLE;
 
-        // 4. JwtService'i kullanarak Token'ı üret
         String token = jwtService.generateToken(
-                user.getId(),
-                user.getUsername(),
-                user.getFullName(),
-                roleName
-        );
+                user.getId(), user.getUsername(), user.getFullName(), roleName);
 
-        // 5. Yanıtı hazırla ve Angular'a gönder
+        String partnerName = partnerDao.findById(user.getPartnerId())
+                .map(Partner::getName)
+                .orElse(null);
+
+        UserDto userDto = new UserDto(
+                user.getId(),
+                user.getFullName(),
+                user.getUsername(),
+                roleName,
+                user.getPartnerId(),
+                partnerName);
+
         LoginResponse response = new LoginResponse();
         response.setToken(token);
-        response.setTokenType("Bearer"); // JWT standardı gereği token tipini belirtiyoruz
-
-        // Eksik olan UserDto nesnesini oluşturup içini dolduruyoruz
-        // (Eğer import edilmediyse en yukarıya ekle: import com.danyengirisken.interntaskhub.entity.dto.UserDto;)
-        com.danyengirisken.interntaskhub.entity.dto.UserDto userDto = new com.danyengirisken.interntaskhub.entity.dto.UserDto();
-        userDto.setUsername(user.getUsername());
-
-        // Eğer UserDto içinde aşağıdaki alanlar (id, fullName) tanımlıysa onları da set edebilirsin.
-        // Tanımlı değilse sadece setUsername kalması yeterlidir, Angular'ın çökmesini engeller:
-        // userDto.setId(user.getId());
-        // userDto.setFullName(user.getFullName());
-
+        response.setTokenType("Bearer");
         response.setUser(userDto);
-
-        // Menü listesi şimdilik boş gidebilir, eğer Angular menüleri bekliyorsa boş bir liste dönmek hatayı önler
-        response.setMenus(new java.util.ArrayList<>());
+        // Menuler rolun yetkilerine gore uretilir (S_MENU -> S_PERMISSION -> S_ROLE_PERMISSION)
+        response.setMenus(user.getRole() != null
+                ? menuService.findByRoleId(user.getRole().getId())
+                : new ArrayList<>());
 
         return response;
     }
 
     @Override
     public void register(RegisterRequest request) {
-        // ... Burası bir önceki adımda yazdığımız haliyle birebir aynı kalacak ...
+        Role role = roleDao.findByName(DEFAULT_ROLE)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Varsayılan rol bulunamadı: " + DEFAULT_ROLE));
+
+        Partner partner = partnerDao.findByCode(DEFAULT_PARTNER_CODE)
+                .or(() -> partnerDao.findAllByOrderByNameAsc().stream().findFirst())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Varsayılan partner bulunamadı: " + DEFAULT_PARTNER_CODE));
+
         User newUser = new User();
         newUser.setUsername(request.getUsername());
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
         newUser.setFullName(request.getUsername());
-
-        Role defaultRole = new Role();
-        defaultRole.setId(1L);
-        newUser.setRole(defaultRole);
+        newUser.setRole(role);
+        newUser.setPartnerId(partner.getId());
 
         userDao.save(newUser);
     }

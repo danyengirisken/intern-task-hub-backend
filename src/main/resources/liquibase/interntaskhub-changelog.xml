@@ -9,6 +9,10 @@
          Master changelog (carbon konvansiyonu)
          Sira: once semasal (CREATE/ALTER .xml), sonra veriler.
          Erisim modeli: menu -> permission -> role_permission -> role
+
+         ► MENU / YETKI DEGISIKLIGI icin tek dosya:
+           14_POSTGRESQL_S_MENU_ADD_PERMISSION.xml
+           (runOnChange; yetkiler + rol dagilimi + menu agaci orada)
          ============================================================ -->
 
     <!-- Sema: temel tablolar -->
@@ -16,13 +20,13 @@
     <include file="liquibase/changeSets/2_POSTGRESQL_CREATE_S_MENU.xml"/>
     <include file="liquibase/changeSets/3_POSTGRESQL_CREATE_S_USER.xml"/>
     <include file="liquibase/changeSets/4_POSTGRESQL_CREATE_S_PARTNER.xml"/>
+
     <!-- Baslangic verisi: roller + kullanicilar -->
     <include file="liquibase/changeSets/5_POSTGRESQL_INITDATA.sql"/>
 
     <!-- S_MENU'yu hiyerarsik yapiya genislet -->
     <include file="liquibase/changeSets/6_POSTGRESQL_ALTER_S_MENU.xml"/>
 
-    <include file="liquibase/changeSets/7_POSTGRESQL_ALTER_S_CUSTOMER.xml"/>
 
     <!-- Görev (task) modülü -->
     <include file="liquibase/changeSets/9_POSTGRESQL_CREATE_T_TASK.xml"/>
@@ -33,12 +37,22 @@
     <include file="liquibase/changeSets/12_POSTGRESQL_CREATE_S_ROLE_PERMISSION.xml"/>
     <include file="liquibase/changeSets/13_POSTGRESQL_ALTER_S_MENU_ADD_PERMISSION.xml"/>
 
-    <!-- Yetkiler + rol atamalari + menuler (PTT tarzi XML/CDATA) -->
-    <include file="liquibase/changeSets/14_POSTGRESQL_INITDATA_PERMISSION_MENU.xml"/>
-
+    <!-- Proje / sprint tablolari -->
     <include file="liquibase/changeSets/15_POSTGRESQL_CREATE_T_PROJECT.xml"/>
-
     <include file="liquibase/changeSets/16_POSTGRESQL_CREATE_T_SPRINT.xml"/>
 
+    <!-- Partner (tenant) baglari -->
+    <include file="liquibase/changeSets/17_POSTGRESQL_ALTER_S_USER_ADD_PARTNER.xml"/>
+    <include file="liquibase/changeSets/20_POSTGRESQL_ALTER_T_TASK_ADD_PARTNER.xml"/>
+
+    <!-- Gorev -> proje -> sprint hiyerarsisi -->
+    <include file="liquibase/changeSets/21_POSTGRESQL_ALTER_T_TASK_ADD_PROJECT_SPRINT.xml"/>
+
+    <!-- ============================================================
+         MENU + YETKI (tek kaynak, runOnChange).
+         Sema ve tablolar hazir olduktan sonra en sonda calisir ki
+         yeni bir ekran eklerken yalnizca bu dosya duzenlensin.
+         ============================================================ -->
+    <include file="liquibase/changeSets/14_POSTGRESQL_S_MENU_ADD_PERMISSION.xml"/>
 
 </databaseChangeLog>

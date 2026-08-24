@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Kullanici listesi / rol atama ekrani icin kullanici satiri.
- * Mevcut rolu (roleId + roleName) ile birlikte doner.
+ * Mevcut rolu (roleId + roleName) ve bagli oldugu partner ile birlikte doner.
  */
 @Data
 @NoArgsConstructor
@@ -17,4 +17,6 @@ public class UserListDto {
     private String username;
     private Long roleId;
     private String roleName;
+    private Long partnerId;
+    private String partnerName;
 }

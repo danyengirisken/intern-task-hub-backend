@@ -7,17 +7,16 @@ import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * Görev CRUD uçları (carbon controller stili: findAll/findById/save/delete).
- * Tüm uçlar JWT ile korunur.
+ * Tüm uçlar JWT ile korunur; partner (tenant) filtresi ve rol kontrolü
+ * servis katmanında UserContext ile uygulanır.
  */
 @RestController
 @RequestMapping("/api/tasks")
 @CrossOrigin(origins = "http://localhost:4200")
-@PreAuthorize("hasPermission('#param','TaskController') or hasRole('INTERN') or hasRole('ADMIN')")
 public class TaskController {
 
     private final TaskService taskService;

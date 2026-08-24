@@ -42,7 +42,7 @@ public class Tproject extends Auditable {
     private String code;
 
     @Column(name = "active")
-    private Integer active;
+    private String active;
 
     @Column(name = "start_date")
     private LocalDate start_date;

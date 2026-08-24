@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <!-- =====================================================================
+         Gorevleri de partner'a bagla.
+
+         T_PROJECT partner'a bagliydi ama T_TASK degildi; bu yuzden bir partner'in
+         kullanicisi baska partnerin gorevlerini gorebiliyordu. Kolon eklenir,
+         mevcut kayitlar varsayilan partner'a (ABT) tasinir.
+         ===================================================================== -->
+
+    <changeSet author="danyengirisken" id="ALTER_T_TASK_ADD_PARTNER_ID">
+        <addColumn tableName="T_TASK">
+            <column name="partner_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="UPDATE_T_TASK_SET_DEFAULT_PARTNER" dbms="postgresql">
+        <sql dbms="postgresql" splitStatements="true" stripComments="true">
+            <![CDATA[
+            update t_task
+               set partner_id = (select id from s_partner where code = 'ABT')
+             where partner_id is null;
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="ALTER_T_TASK_PARTNER_ID_NOT_NULL">
+        <addNotNullConstraint
+                tableName="T_TASK"
+                columnName="partner_id"
+                columnDataType="BIGINT"/>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="ALTER_T_TASK_ADD_PARTNER_FK">
+        <addForeignKeyConstraint
+                baseTableName="T_TASK"
+                baseColumnNames="partner_id"
+                constraintName="FK_T_TASK_PARTNER"
+                referencedTableName="S_PARTNER"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

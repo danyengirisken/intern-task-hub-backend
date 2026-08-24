@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <!-- ======================================================================
+         MENU + YETKI YONETIMI — TEK KAYNAK
+
+         Uygulamadaki tum yetkiler (S_PERMISSION), rol->yetki dagilimi
+         (S_ROLE_PERMISSION) ve menu agaci (S_MENU) YALNIZCA bu dosyada tanimlidir.
+         Yeni ekran eklerken baska hicbir changeSet'e dokunmaniza gerek yoktur.
+
+         ====================================================================
+         NASIL CALISIR
+         ====================================================================
+         changeSet runOnChange="true" olarak isaretlidir: bu dosyayi her
+         degistirdiginizde Liquibase changeSet'i yeniden calistirir. Ic mantik
+         "once temizle, sonra bastan kur" seklindedir; bu yuzden tekrar tekrar
+         calismasi guvenlidir ve dosyanin icerigi her zaman veritabanindaki
+         durumun aynisidir. Duzeltmek icin defensive update/delete yazmanız
+         gerekmez — sadece asagidaki listeleri duzenleyin.
+
+         Menu id'leri her calismada yeniden uretilir. Hicbir yerde kalici olarak
+         saklanmadiklari icin (frontend menuyu her login'de yeniden alir) bu
+         sorun degildir.
+
+         ====================================================================
+         ERISIM MODELI
+         ====================================================================
+         S_MENU.permission_id -> S_PERMISSION -> S_ROLE_PERMISSION -> S_ROLE
+
+         Bir menu, kullanicinin rolu o menunun yetkisine sahipse gorunur
+         (permission_id null ise herkese aciktir). Grup menuleri (page'i olmayan
+         basliklar) alti bosalirsa MenuServiceImpl tarafindan otomatik elenir.
+
+         Roller 5_POSTGRESQL_INITDATA.sql icinde tanimlidir:
+           ADMIN                 : sistem yoneticisi, tum partnerler, her ekran
+           CUSTOMER_ADMIN : partner yoneticisi. Calisma Alani + kendi
+                                   partnerindeki kullanicilara rol atama.
+           CUSTOMER       : son kullanici, yalnizca Calisma Alani.
+
+         ====================================================================
+         MENU AGACI
+         ====================================================================
+           Dashboard                          /dashboard
+           Calisma Alani                      (grup)
+             |_ Projeler                      /projeler
+             |_ Gorevler                      /gorevler
+             |_ Sprintler                     /sprintler
+           Sistem Ayarlari                    (grup)
+             |_ Kullanicilar                  /sistem/kullanicilar
+             |_ Kullanicilara Rol Atama       /sistem/rol-atama
+             |_ Partnerler                    /partnerler
+
+         ====================================================================
+         YENI EKRAN EKLEME (3 adim, hepsi bu dosyada)
+         ====================================================================
+         1) "1) YETKILER" listesine bir satir ekleyin:
+              (nextval('SEQ_S_PERMISSION'), 'RaporController', 'Raporlar', now())
+         2) "2) ROL -> YETKI MATRISI" bolumunde yetkiyi gorecek rollerin
+            in (...) listesine 'RaporController' yazin. (ADMIN'e eklemenize
+            gerek yok; ADMIN tum yetkileri otomatik alir.)
+         3) "3) MENULER" bolumune menu satirini ekleyin; parent_id icin ust
+            grubun basligini yazin, kok menu ise null birakin.
+
+         Ardindan frontend'de app.routes.ts'e ayni path ile route ekleyin —
+         menuGuard yetkilendirmeyi bu page degerine gore yapar.
+         ====================================================================== -->
+
+    <changeSet author="danyengirisken" id="S_MENU_ADD_PERMISSION" dbms="postgresql" runOnChange="true">
+        <sql dbms="postgresql" splitStatements="true" stripComments="true">
+            <![CDATA[
+            -- =================================================================
+            -- 0) TEMIZLIK — bagimlilik sirasina gore (menu -> grant -> yetki)
+            -- =================================================================
+            delete from s_menu;
+            delete from s_role_permission;
+            delete from s_permission;
+
+            -- =================================================================
+            -- 1) YETKILER
+            --    name  : benzersiz teknik ad (controller adi veya menu grubu)
+            --    title : kullaniciya gorunen aciklama
+            -- =================================================================
+            insert into s_permission (id, name, title, created_date) values
+                (nextval('SEQ_S_PERMISSION'), 'DashboardView',      'Dashboard',               now()),
+                (nextval('SEQ_S_PERMISSION'), 'CalismaAlaniMenu',   'Çalışma Alanı',           now()),
+                (nextval('SEQ_S_PERMISSION'), 'ProjectController',  'Projeler',                now()),
+                (nextval('SEQ_S_PERMISSION'), 'TaskController',     'Görevler',                now()),
+                (nextval('SEQ_S_PERMISSION'), 'SprintController',   'Sprintler',               now()),
+                (nextval('SEQ_S_PERMISSION'), 'SistemAyarlariMenu', 'Sistem Ayarları',         now()),
+                (nextval('SEQ_S_PERMISSION'), 'UserController',     'Kullanıcılar',            now()),
+                (nextval('SEQ_S_PERMISSION'), 'RolAtamaController', 'Kullanıcılara Rol Atama', now()),
+                (nextval('SEQ_S_PERMISSION'), 'PartnerController',  'Partnerler',              now());
+
+            -- =================================================================
+            -- 2) ROL -> YETKI MATRISI
+            -- =================================================================
+
+            -- ADMIN: tum yetkiler (yeni yetki eklendiginde otomatik kapsanir)
+            insert into s_role_permission (role_id, permission_id)
+            select r.id, p.id
+              from s_role r cross join s_permission p
+             where r.name = 'ADMIN';
+
+            -- CUSTOMER_ADMIN: Calisma Alani + kullanici/rol yonetimi
+            -- (Partner ekranini GORMEZ; partner yonetimi sistem yoneticisindedir)
+            insert into s_role_permission (role_id, permission_id)
+            select r.id, p.id
+              from s_role r cross join s_permission p
+             where r.name = 'CUSTOMER_ADMIN'
+               and p.name in ('DashboardView',
+                              'CalismaAlaniMenu',
+                              'ProjectController',
+                              'TaskController',
+                              'SprintController',
+                              'SistemAyarlariMenu',
+                              'UserController',
+                              'RolAtamaController');
+
+            -- CUSTOMER: yalnizca Calisma Alani ekranlari
+            insert into s_role_permission (role_id, permission_id)
+            select r.id, p.id
+              from s_role r cross join s_permission p
+             where r.name = 'CUSTOMER'
+               and p.name in ('DashboardView',
+                              'CalismaAlaniMenu',
+                              'ProjectController',
+                              'TaskController',
+                              'SprintController');
+
+            -- =================================================================
+            -- 3) MENULER
+            --    Once kok menuler, sonra alt menuler (parent_id baslikla bulunur)
+            -- =================================================================
+
+            -- --- Kok menuler ---
+            insert into s_menu (id, parent_id, title, page, icon, menu_order, active, permission_id, created_date) values
+                (nextval('SEQ_S_MENU'), null, 'Dashboard', '/dashboard', 'dashboard', 1, true,
+                 (select id from s_permission where name = 'DashboardView'), now()),
+                (nextval('SEQ_S_MENU'), null, 'Çalışma Alanı', null, 'workspaces', 10, true,
+                 (select id from s_permission where name = 'CalismaAlaniMenu'), now()),
+                (nextval('SEQ_S_MENU'), null, 'Sistem Ayarları', null, 'settings', 20, true,
+                 (select id from s_permission where name = 'SistemAyarlariMenu'), now());
+
+            -- --- Calisma Alani alti ---
+            insert into s_menu (id, parent_id, title, page, icon, menu_order, active, permission_id, created_date) values
+                (nextval('SEQ_S_MENU'),
+                 (select id from s_menu where title = 'Çalışma Alanı' and parent_id is null),
+                 'Projeler', '/projeler', 'folder', 1, true,
+                 (select id from s_permission where name = 'ProjectController'), now()),
+                (nextval('SEQ_S_MENU'),
+                 (select id from s_menu where title = 'Çalışma Alanı' and parent_id is null),
+                 'Görevler', '/gorevler', 'task_alt', 2, true,
+                 (select id from s_permission where name = 'TaskController'), now()),
+                (nextval('SEQ_S_MENU'),
+                 (select id from s_menu where title = 'Çalışma Alanı' and parent_id is null),
+                 'Sprintler', '/sprintler', 'view_kanban', 3, true,
+                 (select id from s_permission where name = 'SprintController'), now());
+
+            -- --- Sistem Ayarlari alti ---
+            insert into s_menu (id, parent_id, title, page, icon, menu_order, active, permission_id, created_date) values
+                (nextval('SEQ_S_MENU'),
+                 (select id from s_menu where title = 'Sistem Ayarları' and parent_id is null),
+                 'Kullanıcılar', '/sistem/kullanicilar', 'group', 1, true,
+                 (select id from s_permission where name = 'UserController'), now()),
+                (nextval('SEQ_S_MENU'),
+                 (select id from s_menu where title = 'Sistem Ayarları' and parent_id is null),
+                 'Kullanıcılara Rol Atama', '/sistem/rol-atama', 'manage_accounts', 2, true,
+                 (select id from s_permission where name = 'RolAtamaController'), now()),
+                (nextval('SEQ_S_MENU'),
+                 (select id from s_menu where title = 'Sistem Ayarları' and parent_id is null),
+                 'Partnerler', '/partnerler', 'apartment', 3, true,
+                 (select id from s_permission where name = 'PartnerController'), now());
+            ]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

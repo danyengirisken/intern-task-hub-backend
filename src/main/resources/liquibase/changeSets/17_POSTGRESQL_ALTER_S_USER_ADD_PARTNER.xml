@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+
+    <changeSet author="danyengirisken" id="INITDATA_S_PARTNER_DEFAULT" dbms="postgresql">
+        <sql dbms="postgresql" splitStatements="true" stripComments="true">
+            <![CDATA[
+            insert into s_partner (id, code, name, using_language, description, active, created_date)
+            select nextval('SEQ_S_PARTNER'), 'ABT', 'Ankara BT', 'tr', 'Varsayılan partner', '1', now()
+            where not exists (select 1 from s_partner where code = 'ABT');
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="ALTER_S_USER_ADD_PARTNER_ID">
+        <addColumn tableName="S_USER">
+            <column name="partner_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="UPDATE_S_USER_SET_DEFAULT_PARTNER" dbms="postgresql">
+        <sql dbms="postgresql" splitStatements="true" stripComments="true">
+            <![CDATA[
+            update s_user
+               set partner_id = (select id from s_partner where code = 'ABT')
+             where partner_id is null;
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="ALTER_S_USER_PARTNER_ID_NOT_NULL">
+        <addNotNullConstraint
+                tableName="S_USER"
+                columnName="partner_id"
+                columnDataType="BIGINT"/>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="ALTER_S_USER_ADD_PARTNER_FK">
+        <addForeignKeyConstraint
+                baseTableName="S_USER"
+                baseColumnNames="partner_id"
+                constraintName="FK_S_USER_PARTNER"
+                referencedTableName="S_PARTNER"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

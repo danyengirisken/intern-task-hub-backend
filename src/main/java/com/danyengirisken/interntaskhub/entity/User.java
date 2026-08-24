@@ -42,6 +42,10 @@ public class User extends Auditable {
     @Column(name = "password", nullable = false, length = 255)
     private String password;
 
+    /** Kullanicinin bagli oldugu partner (S_PARTNER). Proje kayitlarinda bu deger kullanilir. */
+    @Column(name = "partner_id", nullable = false)
+    private Long partnerId;
+
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "role_id", nullable = false)
     @ToString.Exclude

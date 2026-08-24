@@ -7,11 +7,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDto {
+public class PartnerDto {
     private Long id;
-    private String fullName;
-    private String username;
-    private String role;
-    private Long partnerId;
-    private String partnerName;
+    private String code;
+    private String name;
+    private String usingLanguage;
+    private String description;
+    /** '1' aktif, '0' pasif. */
+    private String active;
 }

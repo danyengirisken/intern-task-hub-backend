@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <!-- ======================================================================
+         Gorevleri projeye ve sprinte bagla.
+
+           S_PARTNER  Kilic Holding
+              |_ T_PROJECT   Trendyol uyg.
+                    |_ T_SPRINT   Sprint 1
+                          |_ T_TASK   login ekrani duzeltme
+
+         project_id ZORUNLU  : her gorev bir projeye aittir. Gorevin partneri
+                               de projeden gelir (T_TASK.partner_id, kayit
+                               sirasinda projeden turetilir).
+         sprint_id  OPSIYONEL: sprinte alinmamis gorevler backlog'da durur.
+
+         Mevcut demo gorevleri icin bir demo proje + sprint olusturulur.
+         ====================================================================== -->
+
+    <changeSet author="danyengirisken" id="INITDATA_T_PROJECT_DEMO" dbms="postgresql">
+        <sql dbms="postgresql" splitStatements="true" stripComments="true">
+            <![CDATA[
+            insert into t_project (id, partner_id, name, code, description, active, created_date)
+            select nextval('SEQ_T_PROJECT'),
+                   (select id from s_partner where code = 'ABT'),
+                   'Intern Task Hub', 'ITH', 'Demo proje', '1', now()
+            where not exists (select 1 from t_project where code = 'ITH');
+
+            insert into t_sprint (id, name, description, project_id, active, created_date)
+            select nextval('SEQ_T_SPRINT'),
+                   'Sprint 1', 'Demo sprint',
+                   (select id from t_project where code = 'ITH'), 1, now()
+            where not exists (select 1 from t_sprint where name = 'Sprint 1');
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="ALTER_T_TASK_ADD_PROJECT_SPRINT">
+        <addColumn tableName="T_TASK">
+            <column name="project_id" type="BIGINT"/>
+            <column name="sprint_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="UPDATE_T_TASK_SET_DEMO_PROJECT" dbms="postgresql">
+        <sql dbms="postgresql" splitStatements="true" stripComments="true">
+            <![CDATA[
+            update t_task
+               set project_id = (select id from t_project where code = 'ITH'),
+                   sprint_id  = (select id from t_sprint where name = 'Sprint 1')
+             where project_id is null;
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="ALTER_T_TASK_PROJECT_ID_NOT_NULL">
+        <addNotNullConstraint
+                tableName="T_TASK"
+                columnName="project_id"
+                columnDataType="BIGINT"/>
+    </changeSet>
+
+    <changeSet author="danyengirisken" id="ALTER_T_TASK_ADD_PROJECT_SPRINT_FK">
+        <addForeignKeyConstraint
+                baseTableName="T_TASK"
+                baseColumnNames="project_id"
+                constraintName="FK_T_TASK_PROJECT"
+                referencedTableName="T_PROJECT"
+                referencedColumnNames="id"/>
+        <addForeignKeyConstraint
+                baseTableName="T_TASK"
+                baseColumnNames="sprint_id"
+                constraintName="FK_T_TASK_SPRINT"
+                referencedTableName="T_SPRINT"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

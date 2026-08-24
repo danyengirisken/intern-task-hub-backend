@@ -3,9 +3,7 @@ package com.danyengirisken.interntaskhub.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-/**
- * Uygulamaya giris yapan kullanici. Sifre BCrypt hash olarak saklanir.
- */
+
 @Entity
 @Table(name = "S_PARTNER")
 @Data
@@ -26,13 +24,12 @@ public class Partner extends Auditable {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(name = "using_language", nullable = false, length = 100)
-    private String using_language;
+    @Column(name = "using_language", nullable = false, length = 10)
+    private String usingLanguage;
 
     @Column(name = "description", length = 4000)
     private String description;
 
-    @Column(name = "active", nullable = false ,length = 2)
-    private String avtive;
-
+    @Column(name = "active", nullable = false, length = 2)
+    private String active;
 }

@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 
 /**
  * Görev cevabı (entity doğrudan dışarı açılmaz).
+ * Proje ve sprint adları, liste/pano ekranlarının ek istek atmaması için
+ * doğrudan cevaba konur.
  */
 @Data
 @NoArgsConstructor
@@ -20,4 +22,9 @@ public class TaskDto {
     private String priority;
     private LocalDate dueDate;
     private LocalDateTime createdDate;
+    private Long projectId;
+    private String projectName;
+    /** null ise görev backlog'dadır. */
+    private Long sprintId;
+    private String sprintName;
 }

@@ -34,6 +34,21 @@ public class Task extends Auditable {
     @Column(name = "id")
     private Long id;
 
+    /** Gorevin ait oldugu proje (zorunlu). */
+    @Column(name = "project_id", nullable = false)
+    private Long projectId;
+
+    /** Gorevin alindigi sprint; null ise gorev backlog'dadir. */
+    @Column(name = "sprint_id")
+    private Long sprintId;
+
+    /**
+     * Gorevin ait oldugu partner (tenant). Kayit sirasinda projeden turetilir,
+     * istemciden alinmaz — boylece proje ile partner asla ayrisamaz.
+     */
+    @Column(name = "partner_id", nullable = false)
+    private Long partnerId;
+
     @Column(name = "title", nullable = false, length = 200)
     private String title;
 
