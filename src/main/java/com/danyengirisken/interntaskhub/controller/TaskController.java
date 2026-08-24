@@ -28,6 +28,7 @@ public class TaskController {
 
     @GetMapping("/findAll")
     public ResponseEntity<List<TaskDto>> findAll() {
+
         return new ResponseEntity<>(taskService.findAll(), HttpStatus.OK);
     }
 

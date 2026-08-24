@@ -48,6 +48,13 @@ public class UserServiceImpl implements UserService {
         return toDto(userDao.save(user));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public User findByUsername(String username) {
+        return userDao.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı: " + username));
+    }
+
     private UserListDto toDto(User user) {
         return new UserListDto(
                 user.getId(),

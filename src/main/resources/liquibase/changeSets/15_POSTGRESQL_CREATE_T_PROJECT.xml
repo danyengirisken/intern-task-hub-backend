@@ -5,56 +5,103 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
+    <!-- Envers revision tablosu -->
+    <changeSet author="mirackoc" id="REVINFO">
+        <createTable tableName="REVINFO">
+            <column name="REV" type="BIGINT">
+                <constraints
+                        primaryKey="true"
+                        primaryKeyName="PK_REVINFO"
+                        nullable="false"/>
+            </column>
+
+            <column name="REVTSTMP" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
     <changeSet author="mirackoc" id="SEQ_T_PROJECT" failOnError="false">
-        <createSequence sequenceName="SEQ_T_PROJECT" startValue="1" incrementBy="1"/>
+        <createSequence
+                sequenceName="SEQ_T_PROJECT"
+                startValue="1"
+                incrementBy="1"/>
     </changeSet>
 
     <changeSet author="mirackoc" id="T_PROJECT" failOnError="false">
         <createTable tableName="T_PROJECT">
+
             <column name="id" type="BIGINT">
-                <constraints primaryKey="true" primaryKeyName="PK_T_PROJECT" nullable="false"/>
+                <constraints
+                        primaryKey="true"
+                        primaryKeyName="PK_T_PROJECT"
+                        nullable="false"/>
             </column>
+
             <column name="partner_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
+
             <column name="description" type="VARCHAR(250)"/>
+
             <column name="name" type="VARCHAR(150)">
                 <constraints nullable="false"/>
             </column>
+
             <column name="code" type="VARCHAR(100)"/>
+
             <column name="start_date" type="DATE"/>
+
             <column name="end_date" type="DATE"/>
+
             <column name="active" type="VARCHAR(2)"/>
+
             <!-- Auditable kolonlari -->
             <column name="created_by" type="BIGINT"/>
             <column name="created_date" type="TIMESTAMP"/>
             <column name="last_modified_by" type="BIGINT"/>
             <column name="last_modified_date" type="TIMESTAMP"/>
+
         </createTable>
     </changeSet>
 
-
     <changeSet author="mirackoc" id="T_PROJECT_AUD" failOnError="false">
         <createTable tableName="T_PROJECT_AUD">
+
             <column name="id" type="BIGINT"/>
+
             <column name="partner_id" type="BIGINT"/>
 
             <column name="description" type="VARCHAR(250)"/>
+
             <column name="name" type="VARCHAR(150)"/>
+
             <column name="code" type="VARCHAR(100)"/>
+
             <column name="start_date" type="DATE"/>
+
             <column name="end_date" type="DATE"/>
+
             <column name="active" type="VARCHAR(2)"/>
-            <column name="rev" type = 'number'/>
-            <column name ="revtype" type = "tinyit"/>
+
+            <column name="rev" type="BIGINT"/>
+
+            <column name="revtype" type="SMALLINT"/>
+
         </createTable>
-        <addPrimaryKey columnNames="id,REV"
-                       constraintName="PK_T_PROJECT_AUD" tableName="T_PROJECT_AUD"/>
-        <addForeignKeyConstraint baseColumnNames="REV"
-                                 baseTableName="T_PROJECT_AUD"
-                                 constraintName="FK_T_PROJECT_AUD" deferrable="true"
-                                 initiallyDeferred="true" referencedColumnNames="REV"
-                                 referencedTableName="REVINFO"/>
+
+        <addPrimaryKey
+                columnNames="id,rev"
+                constraintName="PK_T_PROJECT_AUD"
+                tableName="T_PROJECT_AUD"/>
+
+        <addForeignKeyConstraint
+                baseColumnNames="rev"
+                baseTableName="T_PROJECT_AUD"
+                constraintName="FK_T_PROJECT_AUD"
+                referencedColumnNames="REV"
+                referencedTableName="REVINFO"
+                deferrable="true"
+                initiallyDeferred="true"/>
+
     </changeSet>
 
     <changeSet author="mirackoc" id="ALTER_T_PROJECT_ADD_PARTNER_FK" failOnError="false">

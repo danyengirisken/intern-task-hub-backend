@@ -16,39 +16,36 @@ import java.time.LocalDate;
  *  priority : LOW | MEDIUM | HIGH
  */
 @Entity
-@Table(name = "T_PROJECT")
+@Table(name = "T_SPRINT")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Tproject extends Auditable {
+public class Tsprint extends Auditable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_T_PROJECT")
-    @SequenceGenerator(name = "SEQ_T_PROJECT", sequenceName = "SEQ_T_PROJECT", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_T_SPRINT")
+    @SequenceGenerator(name = "SEQ_T_SPRINT", sequenceName = "SEQ_T_SPRINT", allocationSize = 1)
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "partner_id", nullable = false, length = 200)
-    private Long partner_id;
+    @Column(name = "name", nullable = false, length = 150)
+    private String name;
 
     @Column(name = "description", length = 1000)
     private String description;
 
-    @Column(name = "name", nullable = false, length = 20)
-    private String name;
-
-    @Column(name = "code", length = 20)
-    private String code;
-
-    @Column(name = "active")
-    private Integer active;
+    @Column(name = "project_id", nullable = false)
+    private Long project_id;
 
     @Column(name = "start_date")
     private LocalDate start_date;
 
     @Column(name = "end_date")
     private LocalDate end_date;
+
+    @Column(name = "active")
+    private Integer active;
 
 
 }

@@ -22,6 +22,8 @@
     <!-- S_MENU'yu hiyerarsik yapiya genislet -->
     <include file="liquibase/changeSets/6_POSTGRESQL_ALTER_S_MENU.xml"/>
 
+    <include file="liquibase/changeSets/7_POSTGRESQL_ALTER_S_CUSTOMER.xml"/>
+
     <!-- Görev (task) modülü -->
     <include file="liquibase/changeSets/9_POSTGRESQL_CREATE_T_TASK.xml"/>
     <include file="liquibase/changeSets/10_POSTGRESQL_INITDATA_T_TASK.sql"/>
@@ -35,5 +37,8 @@
     <include file="liquibase/changeSets/14_POSTGRESQL_INITDATA_PERMISSION_MENU.xml"/>
 
     <include file="liquibase/changeSets/15_POSTGRESQL_CREATE_T_PROJECT.xml"/>
+
+    <include file="liquibase/changeSets/16_POSTGRESQL_CREATE_T_SPRINT.xml"/>
+
 
 </databaseChangeLog>

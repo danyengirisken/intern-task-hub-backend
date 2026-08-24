@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="CREATE_T_SPRINT_TABLE" author="mirac">
+
+        <!-- Tablo için Sequence Oluşturma -->
+        <createSequence sequenceName="SEQ_T_SPRINT" startValue="1" incrementBy="1"/>
+
+        <!-- Tabloyu Oluşturma -->
+        <createTable tableName="T_SPRINT">
+            <!-- Primary Key -->
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- İstenen Alanlar -->
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="description" type="VARCHAR(1000)"/>
+
+            <column name="project_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="start_date" type="DATE"/>
+
+            <column name="end_date" type="DATE"/>
+
+            <!-- Aktif/Pasif durumu için Integer (1 veya 0) -->
+            <column name="active" type="INTEGER"/>
+
+            <!-- Auditable (Kalıtım) Alanları -->
+            <column name="created_by" type="BIGINT"/>
+            <column name="created_date" type="TIMESTAMP"/>
+            <column name="last_modified_by" type="BIGINT"/>
+            <column name="last_modified_date" type="TIMESTAMP"/>
+        </createTable>
+
+        <!-- Yabancı Anahtar (Foreign Key) İlişkisi: project_id -> T_PROJECT(id) -->
+        <addForeignKeyConstraint baseColumnNames="project_id"
+                                 baseTableName="T_SPRINT"
+                                 constraintName="FK_T_SPRINT_ON_PROJECT"
+                                 referencedColumnNames="id"
+                                 referencedTableName="T_PROJECT"/>
+
+    </changeSet>
+
+</databaseChangeLog>

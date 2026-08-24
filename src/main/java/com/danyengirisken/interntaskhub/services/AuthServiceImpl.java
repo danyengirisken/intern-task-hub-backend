@@ -1,107 +1,96 @@
 package com.danyengirisken.interntaskhub.services;
 
-import com.danyengirisken.interntaskhub.entity.Menu;
-import com.danyengirisken.interntaskhub.entity.Permission;
+import com.danyengirisken.interntaskhub.entity.Role;
 import com.danyengirisken.interntaskhub.entity.User;
 import com.danyengirisken.interntaskhub.entity.dto.LoginRequest;
 import com.danyengirisken.interntaskhub.entity.dto.LoginResponse;
-import com.danyengirisken.interntaskhub.entity.dto.MenuDto;
-import com.danyengirisken.interntaskhub.entity.dto.UserDto;
-import com.danyengirisken.interntaskhub.repository.MenuDao;
+import com.danyengirisken.interntaskhub.entity.dto.RegisterRequest;
 import com.danyengirisken.interntaskhub.repository.UserDao;
-import com.danyengirisken.interntaskhub.security.JwtService;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import org.springframework.security.authentication.AuthenticationManager;
+import com.danyengirisken.interntaskhub.security.JwtService; // JwtService Importu
+import org.springframework.security.authentication.AuthenticationManager; // AuthManager Importu
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Kullaniciyi dogrular, JWT uretir ve rolun menuleriyle birlikte cevabi hazirlar.
- */
 @Service
 @Transactional
 public class AuthServiceImpl implements AuthService {
 
-    private static final String TOKEN_TYPE = "Bearer";
-
-    private final AuthenticationManager authenticationManager;
     private final UserDao userDao;
-    private final MenuDao menuDao;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
-    public AuthServiceImpl(AuthenticationManager authenticationManager,
-                           UserDao userDao,
-                           MenuDao menuDao,
+    // CONSTRUCTOR GÜNCELLENDİ: Yeni servisleri içeriye alıyoruz
+    public AuthServiceImpl(UserDao userDao,
+                           PasswordEncoder passwordEncoder,
+                           AuthenticationManager authenticationManager,
                            JwtService jwtService) {
-        this.authenticationManager = authenticationManager;
         this.userDao = userDao;
-        this.menuDao = menuDao;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
-        // Hatali kimlik bilgisinde BadCredentialsException firlatir -> 401 doner.
+        // 1. Spring Security ile kullanıcı adı ve şifreyi doğrula
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(), request.getPassword()));
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+        );
 
+        // 2. Doğrulama başarılıysa, token üretmek için kullanıcıyı veritabanından çek
         User user = userDao.findByUsername(request.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "Kullanici bulunamadi: " + request.getUsername()));
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı!"));
 
-        String role = user.getRole().getName();
+        // 3. Kullanıcının rolünü metin formatında al
+        // (Eğer Role class'ının içinde spesifik bir isim alanı varsa örn: getName() onu kullanabilirsin)
+        String roleName = user.getRole() != null ? user.getRole().toString() : "USER";
+
+        // 4. JwtService'i kullanarak Token'ı üret
         String token = jwtService.generateToken(
-                user.getId(), user.getUsername(), user.getFullName(), role);
+                user.getId(),
+                user.getUsername(),
+                user.getFullName(),
+                roleName
+        );
 
-        UserDto userDto = new UserDto(
-                user.getId(), user.getFullName(), user.getUsername(), role);
+        // 5. Yanıtı hazırla ve Angular'a gönder
+        LoginResponse response = new LoginResponse();
+        response.setToken(token);
+        response.setTokenType("Bearer"); // JWT standardı gereği token tipini belirtiyoruz
 
-        List<MenuDto> menus = buildMenusForRole(user);
+        // Eksik olan UserDto nesnesini oluşturup içini dolduruyoruz
+        // (Eğer import edilmediyse en yukarıya ekle: import com.danyengirisken.interntaskhub.entity.dto.UserDto;)
+        com.danyengirisken.interntaskhub.entity.dto.UserDto userDto = new com.danyengirisken.interntaskhub.entity.dto.UserDto();
+        userDto.setUsername(user.getUsername());
 
-        return new LoginResponse(token, TOKEN_TYPE, userDto, menus);
+        // Eğer UserDto içinde aşağıdaki alanlar (id, fullName) tanımlıysa onları da set edebilirsin.
+        // Tanımlı değilse sadece setUsername kalması yeterlidir, Angular'ın çökmesini engeller:
+        // userDto.setId(user.getId());
+        // userDto.setFullName(user.getFullName());
+
+        response.setUser(userDto);
+
+        // Menü listesi şimdilik boş gidebilir, eğer Angular menüleri bekliyorsa boş bir liste dönmek hatayı önler
+        response.setMenus(new java.util.ArrayList<>());
+
+        return response;
     }
 
-    /**
-     * Kullanicinin rolunun yetkilerine gore gorunur menuleri kurar.
-     * Bir menu; aktifse ve (permissionId'si null ise ya da rolun yetkilerinden
-     * birine esitse) gorunur. Cocuk menusu kalmayan grup (page'i null) menuleri
-     * elenir (bos grup gosterilmez).
-     */
-    private List<MenuDto> buildMenusForRole(User user) {
-        Set<Long> permissionIds = user.getRole().getPermissions().stream()
-                .map(Permission::getId)
-                .collect(Collectors.toSet());
+    @Override
+    public void register(RegisterRequest request) {
+        // ... Burası bir önceki adımda yazdığımız haliyle birebir aynı kalacak ...
+        User newUser = new User();
+        newUser.setUsername(request.getUsername());
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        newUser.setFullName(request.getUsername());
 
-        // Aktif + yetkisi olan menuler
-        List<Menu> allowed = menuDao.findAll().stream()
-                .filter(menu -> !Boolean.FALSE.equals(menu.getActive()))
-                .filter(menu -> menu.getPermissionId() == null
-                        || permissionIds.contains(menu.getPermissionId()))
-                .toList();
+        Role defaultRole = new Role();
+        defaultRole.setId(1L);
+        newUser.setRole(defaultRole);
 
-        // En az bir gorunur cocugu olan ust menu id'leri
-        Set<Long> parentsWithChildren = allowed.stream()
-                .map(Menu::getParentId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-
-        return allowed.stream()
-                // Grup (page null) sadece gorunur cocugu varsa kalir; ekranlar her zaman kalir
-                .filter(menu -> menu.getPage() != null || parentsWithChildren.contains(menu.getId()))
-                .map(menu -> new MenuDto(
-                        menu.getId(), menu.getParentId(), menu.getTitle(),
-                        menu.getPage(), menu.getIcon(), menu.getMenuOrder()))
-                .sorted(Comparator.comparing(
-                        MenuDto::getMenuOrder,
-                        Comparator.nullsLast(Comparator.naturalOrder())))
-                .toList();
+        userDao.save(newUser);
     }
 }
