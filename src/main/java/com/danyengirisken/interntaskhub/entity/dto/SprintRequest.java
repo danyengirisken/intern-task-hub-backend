@@ -10,5 +10,6 @@ public class SprintRequest {
     private Long projectId; // Sprint'in hangi projeye ait olduğunu belirler
     private LocalDate startDate;
     private LocalDate endDate;
-    private Integer active;
+    /** '1' aktif, '0' pasif. */
+    private String active;
 }

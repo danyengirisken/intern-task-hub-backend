@@ -44,8 +44,9 @@ public class Tsprint extends Auditable {
     @Column(name = "end_date")
     private LocalDate end_date;
 
-    @Column(name = "active")
-    private Integer active;
+    /** Aktiflik durumu: '1' aktif, '0' pasif (S_PARTNER / T_PROJECT ile ayni). */
+    @Column(name = "active", length = 2)
+    private String active;
 
 
 }
